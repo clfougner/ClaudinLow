@@ -2,11 +2,8 @@
 # 2) Download the required data as described in ".README.md" and in "./Data/README.md"
 # 3) Install the packages listed in ".README.md"
 # 4) Set working directory to "/path/to/ClaudinLow/"
-
-setwd("/Users/christianfougner/Documents/Forskning/ClaudinLowArticle/Article/ClaudinLow/")
-
 # 5) Run the following scripts:
-# Note that the scripts are written so that they can be run independently (given that the required files are available, so there is some redundancy in the scripts.)
+# Note that the scripts are written so that they can be run independently (given that the required files are available), so there is some redundancy in the scripts.
 
 # METABRIC
 source("./Code/METABRIC_patientData.r") # Prepare required data
