@@ -2,7 +2,7 @@
 Repository containing all analyses in Fougner et al. 2019.
 
 ## Data
-Here, we use three datasets, METABRIC, OSLO2 and TCGA-BRCA. See `./Data/README.md` for details.
+Here, we use three datasets, METABRIC, Oslo2 and TCGA-BRCA. See `./Data/README.md` for details.
 
 ### METABRIC
 The METABRIC dataset was first described by [Curtis et al. 2012](https://www.nature.com/articles/nature10983) and later by [Pereira et al. 2016](https://www.nature.com/articles/ncomms11479). The following files are used:
