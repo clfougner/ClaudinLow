@@ -3,7 +3,6 @@
 # 3) Install the packages listed in ".README.md"
 # 4) Set working directory to "/path/to/ClaudinLow/"
 
-a <- Sys.time()
 setwd("/Users/christianfougner/Documents/Forskning/ClaudinLowArticle/Article/ClaudinLow/")
 
 # 5) Run the following scripts:
@@ -26,5 +25,3 @@ source("./Code/TCGA.r") # Prepared required data, identify claudin-low and CoreC
 
 # Other
 source("./Code/CellularityVsPrevalence.r") # Plot the prevalence of claudin-low tumors versus their prevalence in a cohort 
-
-print(Sys.time() - a)
