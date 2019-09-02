@@ -17,7 +17,7 @@ The METABRIC dataset was first described by [Curtis et al. 2012](https://www.nat
 Gene expression data, hormone receptor status, and intrinsic (PAM50) subtype from the [Oslo2 cohort](https://breast-cancer-research.biomedcentral.com/articles/10.1186/s13058-017-0812-y) is downloaded from [GEO accession GSE80999](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE80999) using the getGEO command in R in the `./Code/Oslo2_CoreClaudinLow.r` script; this is done automatically and the data does not need to be downloaded from the linked repository.
 
 ### TCGA-BRCA
-Gene expression data from the [TCGA cohort](https://www.nature.com/articles/nature11412) is downloaded from [cBioportal](http://www.cbioportal.org/study?id=brca_tcga_pan_can_atlas_2018) and saved to `./Data/brca_tcga_pan_can_atlas_2018`.
+Gene expression data from the [TCGA cohort](https://www.nature.com/articles/nature11412) is downloaded from [cBioportal](http://www.cbioportal.org/study?id=brca_tcga_pan_can_atlas_2018/) and saved to `./Data/brca_tcga_pan_can_atlas_2018`.
 
 ## Reference Files
 All reference files are included in this repository, and will be downloaded by cloning it.
