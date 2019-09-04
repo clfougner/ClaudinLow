@@ -1,4 +1,4 @@
-# Re-definition of claudin-low as a breast cancer phenotype
+# Re-definition of _claudin-low_ as a breast cancer phenotype
 Repository containing all analyses in Fougner et al. 2019.
 
 ## Data
