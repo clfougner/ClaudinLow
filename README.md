@@ -1,6 +1,4 @@
 # Re-definition of _claudin-low_ as a breast cancer phenotype
-Repository containing all analyses in the manuscript:
-
 Fougner, C., Bergholtz, H., Norum, J. H. & Sørlie, T. Re-definition of _claudin-low_ as a breast cancer phenotype. Preprint at https://www.biorxiv.org/content/10.1101/756411v1 (2019).
 
 ## Data
