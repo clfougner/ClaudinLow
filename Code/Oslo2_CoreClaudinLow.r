@@ -302,8 +302,6 @@ heatmapAnnot <- HeatmapAnnotation(df = annotationDF,
                                             HER2 = HER2Colors,
                                             IntClust4 = IntClust4Colors))
 
-
-
 hm <- Heatmap(matrix = exprs_CLGenes_scaled,
               clustering_distance_columns = "euclidean",
               clustering_method_columns = "complete",

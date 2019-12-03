@@ -15,7 +15,7 @@ library(ggsci)
 ##################################################
 ## Read input data data
 
-# Read patient data output from ./Code/METABRIC_OutputAllDataPerSample.r
+# Read patient data output from ./Code/METABRIC_patientData.r
 patientData <- read.table(file = "./Output/METABRIC_patientData.txt", header = TRUE, sep = "\t")
 
 # Subtype colors, basal-like, ERBB2+, LumA, LumB, normal-like
@@ -443,7 +443,7 @@ pdf("./Output/Figures/METABRIC_GII_distribution.pdf", height = 3, width = 2.5, p
        xright = c(2.25, 4.25, 6.25),
        ytop = giiBP$stats[3, c(2, 4, 6)],
        lwd = 2)
-
+ 
 dev.off()
 
 
@@ -478,7 +478,7 @@ pdf("./Output/Figures/METABRIC_Mutation_distribution.pdf", height = 3, width = 2
        ytop = mutBP$stats[3, c(2, 4, 6)],
        lwd = 2)
   
-dev.off()
+  dev.off()
 
 
 ##################################################
@@ -580,7 +580,7 @@ pdf("./Output/Figures/METABRIC_Immune_Stromal_Score_distribution.pdf", height = 
        xright = c(2.25, 4.25, 6.25),
        ytop = immuneBP$stats[3, c(2, 4, 6)],
        lwd = 2)
-  
+
   ## StromalScore
   stromalBP <- boxplot(StromalScore ~ PAM50ClaudinLow,
                    data = patientData,
@@ -608,6 +608,7 @@ pdf("./Output/Figures/METABRIC_Immune_Stromal_Score_distribution.pdf", height = 
        xright = c(2.25, 4.25, 6.25),
        ytop = stromalBP$stats[3, c(2, 4, 6)],
        lwd = 2)
+ 
 dev.off()
 
 
@@ -738,6 +739,7 @@ dev.off()
 
 ################################################
 ## GII vs. distance to CL-centroid
+patientData <- read.table(file = "./Output/METABRIC_patientData.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
 # Linear regression of distance to claudin-low centroid vs. GII
 fit <- lm(patientData$CL_distance ~ patientData$GII_PloidyCorrected)
@@ -751,13 +753,12 @@ lmp <- function (modelobject) {
 }
 
 # Plot
-
 patientData$INTCLUST <- factor(patientData$INTCLUST, levels = levels(as.factor(patientData$INTCLUST))[c(1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 2)])
-pdf(file = "./Output/Figures/METABRIC_CLDist_vs_GII.pdf", width = 7, height = 6)
+pdf(file = "./Output/Figures/METABRIC_CLDist_vs_GII.pdf", width = 7, height = 6, useDingbats = FALSE)
   palette(pal_ucscgb(alpha = 1)(11))
   plot(patientData$CL_distance ~ patientData$GII_PloidyCorrected,
        col = patientData$INTCLUST,
-       pch=19,
+       pch = 19,
        ylim = c(10, 70),
        cex=1,
        bty="n",
@@ -767,10 +768,232 @@ pdf(file = "./Output/Figures/METABRIC_CLDist_vs_GII.pdf", width = 7, height = 6)
   
   abline(fit, cex = 10)
   text(x = 0.9, y = max(patientData$CL_distance), labels = paste("R^2 =", round(summary(fit)$r.squared, 2)))
-  text(x = 0.9, y = 0.95*max(patientData$CL_distance), labels = paste("p =", round(lmp(fit), 10)))
+  # The following p value has been checked manually, hard coded for formatting
+  text(x = 0.9, y = 0.95*max(patientData$CL_distance), labels = "P < 0.001")
   
   legend("bottomleft", inset=.02, legend = levels(patientData$INTCLUST), fill = 1:length(levels(patientData$INTCLUST)), horiz=FALSE, title = "IntClust", ncol = 6)
   palette("default")
 dev.off()
 
-print("METABRIC: finished generating figures based off the nine-cell line predictor")
+
+
+################################################
+## Estimate score vs. distance to CL-centroid
+
+subtypeColorsSingle <- c("#DC362A",
+                         "#ED1E78",
+                         "#333A8E",
+                         "#2F6DB9",
+                         "#267255")
+
+claudinLowColor <- "yellow"
+
+patientData$PAM50 <- factor(patientData$PAM50, levels = levels(as.factor(patientData$PAM50)))
+
+## CLDist ~ Stromal
+pdf(file = "./Output/Figures/METABRIC_CLDist_vs_ESTIMATE_Stromal_9CLFill.pdf",
+    width = 3.5,
+    height = 3.5,
+    pointsize = 7, useDingbats = FALSE)
+
+  # Linear regression of distance to claudin-low centroid vs. GII
+  fit <- lm(patientData$CL_distance ~ patientData$StromalScore)
+  palette(subtypeColorsSingle)
+  plot(patientData$CL_distance[patientData$ClaudinLow != "ClaudinLow"] ~ patientData$StromalScore[patientData$ClaudinLow != "ClaudinLow"],
+       bg = patientData$PAM50[patientData$ClaudinLow != "ClaudinLow"],
+       lwd = 0.25,
+       pch = 21,
+       ylim = c(10, 70),
+       xlim = c(min(patientData$StromalScore), max(patientData$StromalScore)),
+       font.main = 1,
+       cex = 1,
+       bty="n",
+       xlab = "Stromal score",
+       main = "Correlation between stromal score and distance \n to claudin-low centroid",
+       ylab = "Distance to claudin-low centroid")
+  
+  for(i in (1:nrow(patientData))[patientData$ClaudinLow == "ClaudinLow"]){
+    
+    points(patientData$CL_distance[i] ~ patientData$StromalScore[i],
+           bg = patientData$PAM50[i],
+           lwd = 0.25,
+           pch = 21,
+           cex = 1,
+           bty="n")
+    
+    points(patientData$CL_distance[i] ~ patientData$StromalScore[i],
+           col = claudinLowColor,
+           pch = 21,
+           cex = 1,
+           lwd = 1.5)
+    
+    points(patientData$CL_distance[i] ~ patientData$StromalScore[i],
+           col = "black",
+           pch = 21,
+           cex = 1.3,
+           lwd = 0.25)
+    
+  }
+  
+  abline(fit, cex = 10)
+  text(x = 1500, y = max(patientData$CL_distance), labels = paste("R^2 =", round(summary(fit)$r.squared, 2)))
+  # The following p value has been checked manually, hard coded for formatting
+  text(x = 1500, y = 0.95*max(patientData$CL_distance), labels = "P < 0.001")
+dev.off()
+
+
+## OtherDist ~ Immune
+pdf(file = "./Output/Figures/METABRIC_OtherDist_vs_ESTIMATE_Stromal_9CLFill.pdf",
+    width = 3.5,
+    height = 3.5,
+    pointsize = 7, useDingbats = FALSE)
+
+  # Linear regression of distance to claudin-low centroid vs. GII
+  fit <- lm(patientData$Other_distance ~ patientData$StromalScore)
+  palette(subtypeColorsSingle)
+  plot(patientData$Other_distance[patientData$ClaudinLow != "ClaudinLow"] ~ patientData$StromalScore[patientData$ClaudinLow != "ClaudinLow"],
+       bg = patientData$PAM50[patientData$ClaudinLow != "ClaudinLow"],
+       lwd = 0.25,
+       pch = 21,
+       ylim = c(10, 70),
+       xlim = c(min(patientData$StromalScore), max(patientData$StromalScore)),
+       font.main = 1,
+       cex = 1,
+       bty="n",
+       xlab = "Stromal score",
+       main = "Correlation between stromal score and distance \n to other centroid",
+       ylab = "Distance to other centroid")
+  
+  for(i in (1:nrow(patientData))[patientData$ClaudinLow == "ClaudinLow"]){
+    
+    points(patientData$Other_distance[i] ~ patientData$StromalScore[i],
+           bg = patientData$PAM50[i],
+           lwd = 0.25,
+           pch = 21,
+           cex = 1,
+           bty="n")
+    
+    points(patientData$Other_distance[i] ~ patientData$StromalScore[i],
+           col = claudinLowColor,
+           pch = 21,
+           cex = 1,
+           lwd = 1.5)
+    
+    points(patientData$Other_distance[i] ~ patientData$StromalScore[i],
+           col = "black",
+           pch = 21,
+           cex = 1.3,
+           lwd = 0.25)
+    
+  }
+  
+  abline(fit, cex = 10)
+  text(x = 0, y = max(patientData$Other_distance), labels = paste("R^2 =", round(summary(fit)$r.squared, 2)))
+  # The following p value has been checked manually, hard coded for formatting
+  text(x = 0, y = 0.95*max(patientData$Other_distance), labels = "P < 0.001")
+dev.off()
+
+
+## CLDist ~ Immune
+pdf(file = "./Output/Figures/METABRIC_CLDist_vs_ESTIMATE_Immune_9CLFill.pdf",
+    width = 3.5,
+    height = 3.5,
+    pointsize = 7, useDingbats = FALSE)
+
+  # Linear regression of distance to claudin-low centroid vs. GII
+  fit <- lm(patientData$CL_distance ~ patientData$ImmuneScore)
+  palette(subtypeColorsSingle)
+  plot(patientData$CL_distance[patientData$ClaudinLow != "ClaudinLow"] ~ patientData$ImmuneScore[patientData$ClaudinLow != "ClaudinLow"],
+       bg = patientData$PAM50[patientData$ClaudinLow != "ClaudinLow"],
+       lwd = 0.25,
+       pch = 21,
+       ylim = c(10, 70),
+       xlim = c(min(patientData$ImmuneScore), max(patientData$ImmuneScore)),
+       font.main = 1,
+       cex = 1,
+       bty="n",
+       xlab = "Immune score",
+       main = "Correlation between immune score and distance \n to claudin-low centroid",
+       ylab = "Distance to claudin-low centroid")
+  
+  for(i in (1:nrow(patientData))[patientData$ClaudinLow == "ClaudinLow"]){
+    
+    points(patientData$CL_distance[i] ~ patientData$ImmuneScore[i],
+           bg = patientData$PAM50[i],
+           lwd = 0.25,
+           pch = 21,
+           cex = 1,
+           bty="n")
+    
+    points(patientData$CL_distance[i] ~ patientData$ImmuneScore[i],
+           col = claudinLowColor,
+           pch = 21,
+           cex = 1,
+           lwd = 1.5)
+    
+    points(patientData$CL_distance[i] ~ patientData$ImmuneScore[i],
+           col = "black",
+           pch = 21,
+           cex = 1.3,
+           lwd = 0.25)
+    
+  }
+  
+  abline(fit, cex = 10)
+  text(x = 2500, y = max(patientData$CL_distance), labels = paste("R^2 =", round(summary(fit)$r.squared, 2)))
+  # The following p value has been checked manually, hard coded for formatting
+  text(x = 2500, y = 0.95*max(patientData$CL_distance), labels = "P < 0.001")
+dev.off()
+
+
+## OtherDist ~ Immune
+pdf(file = "./Output/Figures/METABRIC_OtherDist_vs_ESTIMATE_Immune_9CLFill.pdf",
+    width = 3.5,
+    height = 3.5,
+    pointsize = 7, useDingbats = FALSE)
+
+  # Linear regression of distance to claudin-low centroid vs. GII
+  fit <- lm(patientData$Other_distance ~ patientData$ImmuneScore)
+  palette(subtypeColorsSingle)
+  plot(patientData$Other_distance[patientData$ClaudinLow != "ClaudinLow"] ~ patientData$ImmuneScore[patientData$ClaudinLow != "ClaudinLow"],
+       bg = patientData$PAM50[patientData$ClaudinLow != "ClaudinLow"],
+       lwd = 0.25,
+       pch = 21,
+       ylim = c(10, 70),
+       xlim = c(min(patientData$ImmuneScore), max(patientData$ImmuneScore)),
+       font.main = 1,
+       cex = 1,
+       bty="n",
+       xlab = "Immune score",
+       main = "Correlation between immune score and distance \n to other centroid",
+       ylab = "Distance to other centroid")
+  
+  for(i in (1:nrow(patientData))[patientData$ClaudinLow == "ClaudinLow"]){
+    
+    points(patientData$Other_distance[i] ~ patientData$ImmuneScore[i],
+         bg = patientData$PAM50[i],
+         lwd = 0.25,
+         pch = 21,
+         cex = 1,
+         bty="n")
+    
+    points(patientData$Other_distance[i] ~ patientData$ImmuneScore[i],
+           col = claudinLowColor,
+           pch = 21,
+           cex = 1,
+           lwd = 1.5)
+    
+    points(patientData$Other_distance[i] ~ patientData$ImmuneScore[i],
+           col = "black",
+           pch = 21,
+           cex = 1.3,
+           lwd = 0.25)
+    
+  }
+  
+  abline(fit, cex = 10)
+  text(x = 2500, y = max(patientData$Other_distance), labels = paste("R^2 =", round(summary(fit)$r.squared, 2)))
+  # The following p value has been checked manually, hard coded for formatting
+  text(x = 2500, y = 0.95*max(patientData$Other_distance), labels = "P < 0.001")
+dev.off()
+

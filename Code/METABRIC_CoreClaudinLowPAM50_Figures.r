@@ -463,7 +463,7 @@ pdf("./Output/Figures/METABRIC_CoreClaudinLow_GII_distribution.pdf", height = 3,
        xright = c(2.25, 4.25, 6.25),
        ytop = giiBP$stats[3, c(2, 4, 6)],
        lwd = 2)
-
+  
 dev.off()
 
 
@@ -565,10 +565,10 @@ pdf("./Output/Figures/METABRIC_CoreClaudinLow_ImmuneScore_distribution.pdf", hei
        xright = c(2.25, 4.25, 6.25),
        ytop = immuneBP$stats[3, c(2, 4, 6)],
        lwd = 2)
-  
+
 dev.off()
   
-  ## StromalScore
+## StromalScore
 pdf("./Output/Figures/METABRIC_CoreClaudinLow_StromalScore_distribution.pdf", height = 3, width = 2.5, pointsize = 8)
   par(mar = c(10,4,4,2))
   stromalBP <- boxplot(StromalScore ~ PAM50ClaudinLow,
@@ -597,6 +597,126 @@ pdf("./Output/Figures/METABRIC_CoreClaudinLow_StromalScore_distribution.pdf", he
        xright = c(2.25, 4.25, 6.25),
        ytop = stromalBP$stats[3, c(2, 4, 6)],
        lwd = 2)
+
+dev.off()
+
+
+
+
+
+##################################################
+## Kaplan-Meier plots
+
+## Re-format data
+# Read patient data output
+patientData <- read.table(file = "./Output/METABRIC_patientData_CoreClaudinLow.txt", header = TRUE, sep = "\t")
+
+patientData$ClaudinLow <- as.character(patientData$PAM50)
+patientData$ClaudinLow[patientData$CoreCL == "CoreClaudinLow"] <- "ClaudinLow"
+patientData$ClaudinLow <- as.factor(patientData$ClaudinLow)
+
+patientData$PAM50ClaudinLow <- as.character(patientData$PAM50)
+patientData$PAM50ClaudinLow[patientData$ClaudinLow == "ClaudinLow"] <- paste0(patientData$PAM50[patientData$ClaudinLow == "ClaudinLow"], "ClaudinLow")
+patientData$PAM50ClaudinLow <- as.factor(patientData$PAM50ClaudinLow)
+levels(patientData$PAM50ClaudinLow) <- c(levels(patientData$PAM50ClaudinLow), "LumBClaudinLow")
+
+# Remove Her2 and LumB
+patientData <- patientData[-grep(x = patientData$PAM50ClaudinLow, pattern = "Her2"), ]
+patientData <- patientData[-grep(x = patientData$PAM50ClaudinLow, pattern = "LumB"), ]
+patientData <- droplevels(patientData)
+
+# Create a data frame for the relevant data
+survivalDF_root <- data.frame(sample = patientData$PATIENT_ID,
+                              subtype = patientData$PAM50ClaudinLow,
+                              survival = patientData$OS_MONTHS,
+                              status = patientData$OS_STATUS,
+                              DiseaseSpecificSurvival = patientData$VITAL_STATUS)
+
+
+################################################
+## All claudin lows
+survivalDF <- survivalDF_root[grep(x = survivalDF_root$subtype, pattern = "ClaudinLow"), ]
+survivalDF$SurvObj <- Surv(survivalDF$survival, event = survivalDF$DiseaseSpecificSurvival== "Died of Disease")
+survivalByType <- survfit(SurvObj ~ subtype, data = survivalDF)
+
+survivalPlotClaudinLow <- ggsurvplot(survivalByType,
+                                     data = survivalDF,
+                                     palette = c(subtypeColorsSingle[1],
+                                                 subtypeColorsSingle[2],
+                                                 subtypeColorsSingle[3]),
+                                     pval = TRUE,
+                                     legend = "none",
+                                     censor = FALSE,
+                                     xlim = c(0, 200),
+                                     break.x.by = 50,
+                                     xlab = "Months",
+                                     title = "All claudin-low")
+
+################################################
+## Basal-like + ClaudinLow
+survivalDF <- survivalDF_root[grep(x = survivalDF_root$subtype, pattern = "Basal"), ]
+survivalDF$SurvObj <- Surv(survivalDF$survival, event = survivalDF$DiseaseSpecificSurvival== "Died of Disease")
+survivalByType <- survfit(SurvObj ~ subtype, data = survivalDF)
+
+survivalPlotBasal <- ggsurvplot(survivalByType,
+                                data = survivalDF,
+                                palette = c(subtypeColorsSingle[1],
+                                            claudinLowColor),
+                                pval = TRUE,
+                                legend = "none",
+                                censor = FALSE,
+                                xlim = c(0, 200),
+                                break.x.by = 50,
+                                xlab = "Months",
+                                ylab = "",
+                                title = "Basal-like")
+
+################################################
+## LumA + ClaudinLow
+survivalDF <- survivalDF_root[grep(x = survivalDF_root$subtype, pattern = "LumA"), ]
+survivalDF$SurvObj <- Surv(survivalDF$survival, event = survivalDF$DiseaseSpecificSurvival== "Died of Disease")
+survivalByType <- survfit(SurvObj ~ subtype, data = survivalDF)
+
+survivalPlotLumA <- ggsurvplot(survivalByType,
+                               data = survivalDF,
+                               palette = c(subtypeColorsSingle[2],
+                                           claudinLowColor),
+                               pval = TRUE,
+                               legend = "none",
+                               censor = FALSE,
+                               xlim = c(0, 200),
+                               break.x.by = 50,
+                               xlab = "Months",
+                               ylab = "",
+                               title = "LumA")
+
+################################################
+## Normal-like + ClaudinLow
+survivalDF <- survivalDF_root[grep(x = survivalDF_root$subtype, pattern = "Normal"), ]
+survivalDF$SurvObj <- Surv(survivalDF$survival, event = survivalDF$DiseaseSpecificSurvival== "Died of Disease")
+survivalByType <- survfit(SurvObj ~ subtype, data = survivalDF)
+
+survivalPlotNormal <- ggsurvplot(survivalByType,
+                                 data = survivalDF,
+                                 palette = c(subtypeColorsSingle[3],
+                                             claudinLowColor),
+                                 pval = TRUE,
+                                 legend = "none",
+                                 censor = FALSE,
+                                 xlim = c(0, 200),
+                                 break.x.by = 50,
+                                 xlab = "Months",
+                                 ylab = "",
+                                 title = "Normal-like")
+
+
+## Write Kaplan-Meier plots to file
+pdf(file = "./Output/Figures/METABRIC_KaplanMeier_CoreClaudinLow.pdf", height = 2.5, width = 10, onefile=FALSE)
+arrange_ggsurvplots(list(survivalPlotClaudinLow,
+                         survivalPlotBasal,
+                         survivalPlotLumA,
+                         survivalPlotNormal),
+                    nrow = 1, ncol = 4)
 dev.off()
 
 print("METABRIC: Finished generating figures for CoreCL tumors in the context of their intrinsic subtype")

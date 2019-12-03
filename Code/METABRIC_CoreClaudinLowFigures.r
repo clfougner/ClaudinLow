@@ -32,7 +32,7 @@ otherCLColor <- "darkorange2"
 allOthersColor <- "#F2F2F2"
 claudinColors <- c(otherCLColor, coreCLColor)
 
-# Get condnsed claudin-low gene list
+# Get condensed claudin-low gene list
 clGenes <- read.table(file = "./ReferenceFiles/ClaudinLowGenes.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 
 

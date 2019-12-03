@@ -13,14 +13,33 @@ library(circlize)
 library(estimate)
 library(sigclust)
 
+# Colors
+subtypeColorsSingle <- c("#DC362A",
+                         "#ED1E78",
+                         "#333A8E",
+                         "#2F6DB9",
+                         "#267255")
+
+claudinLowColor <- "yellow"
+
+
 ##################################################
 ## Load and format the required data
 
 print("Reading patient/tumor data")
+
 # Read patientData
 patientData <- read.table(file = "./Data/brca_tcga_pan_can_atlas_2018/data_clinical_patient.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
+
+# Read clinical sample file
+histoData <- read.table(file = "./Data/brca_tcga_pan_can_atlas_2018/data_clinical_sample.txt",
+                        header = TRUE,
+                        sep = "\t",
+                        stringsAsFactors = FALSE)
+
 print("Reading gene expression data")
+
 # Read gene expression data
 exprs <- read.table(file = "./Data/brca_tcga_pan_can_atlas_2018/data_RNA_Seq_v2_expression_median.txt", sep = "\t", header = TRUE)
 
@@ -40,7 +59,7 @@ print("Writing gene expression data to file")
 write.table(x = exprs_entrez, file = "./Output/TCGA_geneExpression.txt", sep = "\t", quote = FALSE)
 
 ##################################################
-## Claudin-low subtyping
+## Claudin-low classification
 
 print("Identifying claudin-low tumors using the nine-cell line predictor")
 
@@ -71,6 +90,9 @@ cl_class <- claudinLow(x = trainingData$xd, classes = as.matrix(trainingData$cla
 patientData$ClaudinLow <- as.character(cl_class$predictions$Call)
 patientData$ClaudinLow[patientData$ClaudinLow == "Claudin"] <- "ClaudinLow"
 patientData$ClaudinLow[patientData$ClaudinLow == "Others"] <- "Other"
+
+patientData$CL_Dist <- cl_class$distances[, "euclidian distance to Claudin-low"]
+patientData$Other_Dist <- cl_class$distances[, "euclidian distance to Others"]
 
 print("Finished identifying claudin-low tumors")
 
@@ -116,6 +138,15 @@ patientData <- cbind(patientData, intClust = intClustSubtypes$subtype)
 patientData$IC4Simple <- patientData$intClust
 patientData$IC4Simple <- as.character(patientData$IC4Simple)
 patientData$IC4Simple[patientData$IC4Simple != "iC4"] <- "Other"
+
+####################################
+## Histology
+
+# Add histological classification to patientData
+for(i in 1:nrow(histoData)){
+  patientData$Histology[patientData$PATIENT_ID == histoData$PATIENT_ID[i]] <- histoData$TUMOR_TYPE[otherPatientData$PATIENT_ID == histoData$PATIENT_ID[i]]
+}
+
 
 ####################################
 ## Core ClaudinLow

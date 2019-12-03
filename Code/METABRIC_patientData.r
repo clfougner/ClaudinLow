@@ -12,7 +12,7 @@ library(estimate)
 print("Analyzing the METABRIC cohort")
 
 ##################################################
-## Read and format clinical data
+## Read and format data
 
 # Read clinical data from Curtis et al. Nature 2012, supplementary files 2 and 3 (includes PAM50 without claudin-low)
 print("Reading clinical data files")
@@ -44,6 +44,26 @@ curtis_mb_complete <- curtis_mb[allPtIDs, ]
 row.names(pereira_mb) <- pereira_mb$PATIENT_ID
 pereira_mb_complete <- pereira_mb[allPtIDs, ]
 
+## Histology - available upon request to the authors of Mukherjee et al. npj Breast Cancer 2018
+# hist <- read.table(file = "./Data/Total_Pathology_Review_20130501_10_METABRICID.txt",
+#                   sep = "\t",
+#                   header = TRUE,
+#                   stringsAsFactors = FALSE)
+
+## Mutations
+mutations <- read.table(file = "./Data/brca_metabric/data_mutations_extended.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE, quote = "")
+
+## CNA by gene
+cna <- read.table(file = "./Data/brca_metabric/data_CNA.txt", sep = "\t", header = TRUE)
+
+# Copy number segments
+readSegments <- read.table(file = "./Data/ascatSegments_withoutCNVs.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+# Read sampleID mapping to METABRIC-ID
+patientMap <- read.table(file = "./Data/tumorIdMap.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+# Read chromosome start and ends positions
+chromPos <- read.table(file = "./ReferenceFiles/ChromosomeStartEnds.txt", header = TRUE)
 
 ##################################################
 ## Correctly format gene expression data
@@ -151,6 +171,52 @@ patientData <- patientData[!(patientData$PAM50 == "NC"), ]
 clNum <- table(patientData$ClaudinLow)[["ClaudinLow"]]
 print(paste("There are", clNum, "claudin-low tumors in the cohort."))
 
+##################################################
+## Add centrally reviewed pathology to patientData - data available upon request to the authors of Mukherjee et al. npj Breast Cancer 2018
+
+#hist$comments[hist$comments == ""] <- NA
+#hist_samples <- hist$Metabric_ID[hist$Metabric_ID %in% patientData$PATIENT_ID]
+#
+#for(i in 1:nrow(hist)){
+#  currentSample <- hist$Metabric_ID[i]
+#  if(currentSample %in% hist_samples){
+#    patientData[currentSample, "TUMOR_TYPE"]  <- hist$tumour_type[i]
+#    patientData[currentSample, "TUMOR_TYPE_COMMENTS"]  <- hist$comments[i]
+#  }
+#}
+#
+#
+## See here for grouping: https://www.nature.com/articles/s41523-018-0056-8#Sec14
+#patientData$TUMOR_TYPE_SIMPLE <- NA
+#
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Tubular"] <- "Tubular"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Invasive Cribriform"] <- "Tubular"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Tubulo Lobular"] <- "Tubular"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "MixedTubularandCribriform"] <- "Tubular"
+#
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Lobular Classical"] <- "Lobular"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Lobular Alveolar"] <- "Lobular"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Lobular Solid"] <- "Lobular"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Lobular Pleomorphic"] <- "Lobular"
+#
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Mucinous"] <- "Mucinous"
+#
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Medullary-like/NSTandLymhocyteRichStroma"] <- "Medullary-like"
+#
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "NST"] <- "NST"
+#
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "MixedNSTandSpecialType"] <- "MixedNST/SpecialType"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "MixedNSTandLobular"] <- "MixedNST/SpecialType"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "MixedNSTandMucinous"] <- "MixedNST/SpecialType"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "TubularMixed"] <- "MixedNST/SpecialType"
+#
+#
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "NST/apocrine"] <- "SpecialType"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Metaplastic"] <- "SpecialType"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Invasive Papillary"] <- "SpecialType"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Invasive Micropapillary"] <- "SpecialType"
+#patientData$TUMOR_TYPE_SIMPLE[patientData$TUMOR_TYPE == "Other/Rare/New"] <- "SpecialType"
+
 
 ##################################################
 ## Add MKI67 to patientData
@@ -201,7 +267,6 @@ system("rm ./Output/METABRIC_ESTIMATEscores.txt")
 ##################################################
 ## Get mutation information
 print("Finding mutations")
-mutations <- read.table(file = "./Data/brca_metabric/data_mutations_extended.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE, quote = "")
 
 # Remove mutations found in patients without all required data
 mutations <- mutations[mutations$Tumor_Sample_Barcode %in% patientData$PATIENT_ID, ]
@@ -227,7 +292,6 @@ for(patient in patientData$PATIENT_ID){
 ## Get gene centric copy number aberrations
 # Get selected relevant genes
 print("Finding selected copy number aberrations")
-cna <- read.table(file = "./Data/brca_metabric/data_CNA.txt", sep = "\t", header = TRUE)
 
 # Get selected relevant genes
 myc <- cna[grep(x = cna$Hugo_Symbol, pattern = "^MYC$"), ]
@@ -263,12 +327,6 @@ rownames(patientData) <- patientData$PATIENT_ID
 
 print("Calculating genomic instability index")
 
-# Read copy number segments
-readSegments <- read.table(file = "./Data/ascatSegments_withoutCNVs.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-
-# Read sampleID mapping to METABRIC-ID
-patientMap <- read.table(file = "./Data/tumorIdMap.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-
 # Merge IDs
 segments <- merge(x = readSegments, y = patientMap, by =  "sample")
 segments <- segments[with(segments, order(metabricId, chr, start)), ]
@@ -280,8 +338,7 @@ segments <- segments[segments$metabricId %in% patientData$PATIENT_ID, ]
 # Remove patients which do not have CNA data from patientData
 patientData <- patientData[patientData$PATIENT_ID %in% segments$metabricId, ]
 
-# Read chromosome start and ends positions
-chromPos <- read.table(file = "./ReferenceFiles/ChromosomeStartEnds.txt", header = TRUE)
+# Total number of nucleotides
 totalNucleotides <- sum(chromPos$end - chromPos$start)
 
 # Calculate GII for each tumor and add to patientData, add purity and ploidy
@@ -322,65 +379,5 @@ print(paste("There are", nrow(patientData), "tumors with all required data, of w
 print("Saving patient data to file")
 
 write.table(x = patientData, file = "./Output/METABRIC_patientData.txt", sep = "\t", quote = FALSE)
-
-##################################################
-## Write tables with subtype distributions
-
-# PAM50
-pam50table <- data.frame(table(patientData$PAM50))
-pam50table <- data.frame(Count = pam50table$Freq, row.names = pam50table$Var1)
-
-pam50proportion <- c()
-for(i in 1:nrow(pam50table)){
-  prop <- pam50table[i, "Count"]/(sum(pam50table$Count))
-  pam50proportion <- c(pam50proportion, prop)
-}
-
-pam50table <- data.frame(pam50table, Proportion = pam50proportion)
-
-colnames(pam50table) <- c("Count_PAM50", "Proportion_PAM50")
-
-write.table(x = pam50table, file = "./Output/METABRIC_PAM50_distribution.txt", sep = "\t", quote = FALSE)
-
-# Claudin-low + PAM50
-claudinLow_table <- data.frame(table(patientData$ClaudinLow))
-claudinLow_table <- data.frame(Count = claudinLow_table$Freq, row.names = claudinLow_table$Var1)
-
-claudinLow_proportion <- c()
-for(i in 1:nrow(claudinLow_table)){
-  prop <- claudinLow_table[i, "Count"]/(sum(claudinLow_table$Count))
-  claudinLow_proportion <- c(claudinLow_proportion, prop)
-}
-
-claudinLow_table <- data.frame(claudinLow_table, Proportion = claudinLow_proportion)
-
-colnames(claudinLow_table) <- c("Count", "Proportion")
-
-write.table(x = claudinLow_table, file = "./Output/METABRIC_PAM50+CL_distribution.txt", sep = "\t", quote = FALSE)
-
-
-# Claudin-low with underlying PAM50 subtype
-distrib <- table(patientData$PAM50ClaudinLow)
-clPAM <- data.frame(PAM50minusCL = c(distrib[["Basal"]],
-                                     distrib[["Her2"]],
-                                     distrib[["LumA"]],
-                                     distrib[["LumB"]],
-                                     distrib[["Normal"]]),
-           CLwithUnderlyingPAM50 = c(distrib[["BasalClaudinLow"]],
-                                     distrib[["Her2ClaudinLow"]],
-                                     distrib[["LumAClaudinLow"]],
-                                     distrib[["LumBClaudinLow"]],
-                                     distrib[["NormalClaudinLow"]]),
-                        row.names = rownames(pam50table))
-
-CL_prop <- c()
-for(i in 1:nrow(clPAM)){
-  prop <- clPAM$CLwithUnderlyingPAM50[i]/(clPAM$PAM50minusCL[i] + clPAM$CLwithUnderlyingPAM50[i])
-  CL_prop <- c(CL_prop, prop)
-}
-
-clPAM <- data.frame(clPAM, CL_prop = CL_prop, row.names = rownames(clPAM))
-
-write.table(x = clPAM, file = "./Output/METABRIC_PAM50ClaudinLow_distribution.txt", sep = "\t", quote = FALSE)
 
 print("Finished creating METABRIC data table. Nothing needs to be done regarding 'NAs introduced by coercion' messages.")

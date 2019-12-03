@@ -10,6 +10,7 @@ print("Identifiying core claudin-low tumors in the METABRIC cohort")
 library(ComplexHeatmap)
 library(circlize)
 library(sigclust)
+library(ggsci)
 
 ##################################################
 ## Read  data
@@ -139,6 +140,18 @@ StromalScoreColors <- colorRamp2(breaks = c(min(patientData$StromalScore),
                                             max(patientData$StromalScore)),
                                  colors = c("#430C53", "#20928C", "#F4E02B"))
 
+# Histology - requires data from Mukherjee et al. npj Breast Cancer 2018 (see METABRIC_patientData.r)
+#Histology <- patientData$TUMOR_TYPE_SIMPLE
+#
+#colPal <- pal_nejm()(7)
+#HistologyColors <- c("NST" = colPal[2],
+#                     "MixedNST/SpecialType" = colPal[1],
+#                     "Lobular" = colPal[3],
+#                     "Tubular" = colPal[4],
+#                     "Mucinous" = colPal[5],
+#                     "Medullary-like" = colPal[6],
+#                     "SpecialType" = colPal[7])
+
 # TP53 mutation
 TP53 <- patientData$TP53_Status
 TP53Colors <-c("Mut" = "#792E85",
@@ -195,6 +208,7 @@ annotationDF <- data.frame(PAM50 = PAM50,
                            CoreClaudinLow = CoreClaudinLow,
                            ImmuneScore = ImmuneScore,
                            StromalScore = StromalScore,
+                           Histology = Histology,
                            TP53 = TP53,
                            PIK3CA = PIK3CA,
                            MYC = MYC,
@@ -210,12 +224,14 @@ heatmapAnnot <- HeatmapAnnotation(df = annotationDF,
                                   annotation_name_side = "right",
                                   show_legend = FALSE,
                                   na_col = "black",
+                                  #gap = unit(c(0.05, 0.05, 0.05, 0, 0.05, 0.05, 0, 0, 0, 0, 0.05, 0.05, 0, 0), "cm"), # If histology data is available
                                   gap = unit(c(0.05, 0.05, 0.05, 0, 0.05, 0, 0, 0, 0, 0.05, 0.05, 0, 0), "cm"),
                                   col = list(PAM50 = PAM50Colors,
                                              ClaudinLow = ClaudinLowColors,
                                              CoreClaudinLow = CoreClaudinLowColors,
                                              ImmuneScore = ImmuneScoreColors,
                                              StromalScore = StromalScoreColors,
+                                             #Histology = HistologyColors, # Un-comment if histology data is available
                                              TP53 = TP53Colors,
                                              PIK3CA = PIK3CAColors,
                                              MYC = MYCColors,
@@ -235,7 +251,7 @@ hm <- Heatmap(matrix = exprs_centered_scaled,
               top_annotation = heatmapAnnot,
               show_heatmap_legend = TRUE)
 
-pdf("./Output/Figures/METABRIC_CoreClaudinLowHeatmap.pdf", width = 9, height = 7)
+pdf("./Output/Figures/METABRIC_CoreClaudinLowHeatmap.pdf", width = 9, height = 8)
   draw(hm)
 dev.off()
 
@@ -244,12 +260,14 @@ heatmapAnnot = HeatmapAnnotation(df = annotationDF,
                        show_annotation_name = TRUE,
                        annotation_name_side = "right",
                        na_col = "black",
+                       #gap = unit(c(0.05, 0.05, 0.05, 0, 0.05, 0.05, 0, 0, 0, 0, 0.05, 0.05, 0, 0), "cm"), # If histology data is available
                        gap = unit(c(0.05, 0.05, 0.05, 0, 0.05, 0, 0, 0, 0, 0.05, 0.05, 0, 0), "cm"),
                        col = list(PAM50 = PAM50Colors,
                                   ClaudinLow = ClaudinLowColors,
                                   CoreClaudinLow = CoreClaudinLowColors,
                                   ImmuneScore = ImmuneScoreColors,
                                   StromalScore = StromalScoreColors,
+                                  #Histology = HistologyColors, # Un-comment if histology is available
                                   TP53 = TP53Colors,
                                   MYC = MYCColors,
                                   MDM4 = MDM4Colors,
